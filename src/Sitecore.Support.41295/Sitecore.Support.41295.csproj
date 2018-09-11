@@ -105,7 +105,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Config\Include\zzz\Sitecore.Support.41295.config" />
     <Content Include="config\global\sc.Sitecore.Support.41295.xml" />
   </ItemGroup>
   <ItemGroup>

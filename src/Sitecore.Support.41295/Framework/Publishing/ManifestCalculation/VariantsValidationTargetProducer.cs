@@ -136,23 +136,34 @@ namespace Sitecore.Support.Framework.Publishing.ManifestCalculation
           var targetVariances = context.TargetMetadata.GetAllVariances()
               .Where(v => v.VariantLastModified >= context.TargetMetadata.BaseLastModified)
               .ToArray();
-
-          if (targetVariances.Any() && targetVariances.Max(v => v.VariantLastModified) < context.Candidate.Node.BaseLastModified)
+          
+          if (targetVariances.Any())
           {
-            // We are definitely sure the base is NOT up to date on the target
-            // promote-base
-            _logger.LogWarning("Item base information definitely needs to be promoted : {ItemId} ({ItemName})", context.Candidate.Node.Id, context.Candidate.Node.Properties.Name);
+            // 41295 check that at least one other property except for Updated differeds in source and target 
+            var targetProperties = context.TargetMetadata.Properties;
+            var sourceProperties = context.Candidate.Node.Properties;
 
-            foreach (var variance in targetVariances)
+            if (targetVariances.Max(v => v.VariantLastModified) < context.Candidate.Node.BaseLastModified
+            && (targetProperties.Name != sourceProperties.Name
+            || targetProperties.ParentId != sourceProperties.ParentId
+            || targetProperties.TemplateId != sourceProperties.TemplateId
+            || targetProperties.MasterId != sourceProperties.MasterId))
             {
-              var match = unmodifiedVariants.FirstOrDefault(x =>
-                   x.Language == variance.Language
-                   && x.Version == variance.Version);
+              // We are definitely sure the base is NOT up to date on the target
+              // promote-base
+              _logger.LogWarning("Item base information definitely needs to be promoted : {ItemId} ({ItemName})", context.Candidate.Node.Id, context.Candidate.Node.Properties.Name);
 
-              if (match != null)
+              foreach (var variance in targetVariances)
               {
-                unmodifiedVariants.Remove(match);
-                toPromote.Add(match);
+                var match = unmodifiedVariants.FirstOrDefault(x =>
+                     x.Language == variance.Language
+                     && x.Version == variance.Version);
+
+                if (match != null)
+                {
+                  unmodifiedVariants.Remove(match);
+                  toPromote.Add(match);
+                }
               }
             }
           }
